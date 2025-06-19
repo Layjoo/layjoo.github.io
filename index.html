@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Bitwise Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #d1d5db; /* text-gray-300 */
+        }
+        .bit-container {
+            font-family: 'Roboto Mono', monospace;
+        }
+        /* Custom switch styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #374151; /* bg-gray-700 */
+            transition: .4s;
+            border-radius: 28px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #3b82f6; /* bg-blue-500 */
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        .op-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .op-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+        }
+        .bit-label {
+            font-size: 0.7rem;
+            color: #6b7280; /* text-gray-500 */
+        }
+        .bit-value {
+             font-size: 1.1rem;
+             font-weight: 700;
+        }
+        .result-bit.highlight-and {
+            animation: pulse-blue 1s ease-out;
+        }
+        .result-bit.highlight-or {
+            animation: pulse-green 1s ease-out;
+        }
+        .result-bit.highlight-xor {
+            animation: pulse-purple 1s ease-out;
+        }
+         .result-bit.highlight-shift {
+            animation: pulse-yellow 1s ease-out;
+        }
+
+        @keyframes pulse-blue {
+            0% { background-color: #1f2937; transform: scale(1); }
+            50% { background-color: #3b82f6; transform: scale(1.2); }
+            100% { background-color: #1f2937; transform: scale(1); }
+        }
+         @keyframes pulse-green {
+            0% { background-color: #1f2937; transform: scale(1); }
+            50% { background-color: #22c55e; transform: scale(1.2); }
+            100% { background-color: #1f2937; transform: scale(1); }
+        }
+         @keyframes pulse-purple {
+            0% { background-color: #1f2937; transform: scale(1); }
+            50% { background-color: #8b5cf6; transform: scale(1.2); }
+            100% { background-color: #1f2937; transform: scale(1); }
+        }
+        @keyframes pulse-yellow {
+            0% { background-color: #1f2937; transform: scale(1); }
+            50% { background-color: #eab308; transform: scale(1.2); }
+            100% { background-color: #1f2937; transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body class="p-4 sm:p-6 md:p-8">
+    <div class="max-w-4xl mx-auto bg-gray-800 rounded-2xl shadow-2xl p-6">
+
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">Interactive Bitwise Visualizer</h1>
+            <p class="text-gray-400 mt-2">Flip the switches or type a number to see how bitwise operations work!</p>
+        </div>
+
+        <!-- Operand A -->
+        <div class="mb-6 p-4 bg-gray-900 rounded-lg">
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-blue-400">Number A</h2>
+                <div class="flex items-center gap-4 mt-2 sm:mt-0">
+                    <span class="text-gray-400">Decimal:</span>
+                    <input type="number" id="decA" min="0" max="255" value="5" class="w-24 bg-gray-700 text-white rounded-md p-2 text-center text-lg font-mono">
+                </div>
+            </div>
+            <div id="bitsA" class="grid grid-cols-4 sm:grid-cols-8 gap-2 bit-container"></div>
+        </div>
+
+        <!-- Operators -->
+        <div class="my-6 p-4 bg-gray-900 rounded-lg text-center">
+            <h2 class="text-2xl font-bold text-white mb-4">Operators</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
+                <button data-op="AND" class="op-btn bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600">&</button>
+                <button data-op="OR" class="op-btn bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600">|</button>
+                <button data-op="XOR" class="op-btn bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-600">^</button>
+                <button data-op="NOT" class="op-btn bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600">~ <small>(A)</small></button>
+                <button data-op="LSHIFT" class="op-btn bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600">&lt;&lt; <small>(A by 1)</small></button>
+                <button data-op="RSHIFT" class="op-btn bg-gray-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600">&gt;&gt; <small>(A by 1)</small></button>
+                <button id="clearOp" class="op-btn bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-500 col-span-2 lg:col-span-1">Clear</button>
+            </div>
+        </div>
+
+        <!-- Operand B -->
+        <div class="mb-6 p-4 bg-gray-900 rounded-lg">
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-green-400">Number B</h2>
+                <div class="flex items-center gap-4 mt-2 sm:mt-0">
+                    <span class="text-gray-400">Decimal:</span>
+                    <input type="number" id="decB" min="0" max="255" value="12" class="w-24 bg-gray-700 text-white rounded-md p-2 text-center text-lg font-mono">
+                </div>
+            </div>
+            <div id="bitsB" class="grid grid-cols-4 sm:grid-cols-8 gap-2 bit-container"></div>
+        </div>
+        
+        <hr class="border-gray-700 my-4">
+
+        <!-- Result -->
+        <div class="mt-6 p-4 bg-gray-900 rounded-lg">
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-yellow-400">Result</h2>
+                <div class="flex items-center gap-4 mt-2 sm:mt-0">
+                    <span class="text-gray-400">Decimal:</span>
+                    <div id="decResult" class="w-24 bg-gray-700 text-white rounded-md p-2 text-center text-lg font-mono">0</div>
+                </div>
+            </div>
+            <div id="bitsResult" class="grid grid-cols-4 sm:grid-cols-8 gap-2 bit-container"></div>
+            <div id="explanation" class="mt-4 text-center text-gray-400 h-6"></div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const decA_input = document.getElementById('decA');
+            const decB_input = document.getElementById('decB');
+            const bitsA_container = document.getElementById('bitsA');
+            const bitsB_container = document.getElementById('bitsB');
+            const bitsResult_container = document.getElementById('bitsResult');
+            const decResult_div = document.getElementById('decResult');
+            const operatorButtons = document.querySelectorAll('.op-btn');
+            const explanationDiv = document.getElementById('explanation');
+
+            // --- State ---
+            let state = {
+                a: 5,
+                b: 12,
+                result: 0,
+                operator: null
+            };
+
+            // --- Functions ---
+
+            // Creates the 8 bit switches for a given container
+            const createBitSwitches = (container, idPrefix) => {
+                container.innerHTML = '';
+                for (let i = 7; i >= 0; i--) {
+                    const value = Math.pow(2, i);
+                    const bitWrapper = document.createElement('div');
+                    bitWrapper.className = 'flex flex-col items-center p-2 rounded-md bg-gray-800';
+                    
+                    const topLabel = document.createElement('span');
+                    topLabel.className = 'bit-label';
+                    topLabel.textContent = `2^${i}`;
+                    
+                    const valueLabel = document.createElement('span');
+                    valueLabel.className = 'bit-value text-white';
+                    valueLabel.textContent = value;
+                    
+                    const switchLabel = document.createElement('label');
+                    switchLabel.className = 'switch mt-1';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `${idPrefix}-bit-${i}`;
+                    checkbox.dataset.bit = i;
+
+                    const slider = document.createElement('span');
+                    slider.className = 'slider';
+
+                    switchLabel.appendChild(checkbox);
+                    switchLabel.appendChild(slider);
+                    
+                    bitWrapper.appendChild(topLabel);
+                    bitWrapper.appendChild(valueLabel);
+                    bitWrapper.appendChild(switchLabel);
+                    
+                    container.appendChild(bitWrapper);
+                }
+            };
+
+            // Creates read-only bits for the result
+            const createResultBits = (container) => {
+                 container.innerHTML = '';
+                 for (let i = 7; i >= 0; i--) {
+                    const bitWrapper = document.createElement('div');
+                    bitWrapper.id = `result-bit-${i}`;
+                    bitWrapper.className = 'result-bit flex flex-col items-center p-2 rounded-md bg-gray-800 h-[92px] justify-center transition-colors duration-300';
+                    
+                    const bitValue = document.createElement('span');
+                    bitValue.className = 'text-4xl font-bold text-gray-600';
+                    bitValue.textContent = '0';
+                    
+                    bitWrapper.appendChild(bitValue);
+                    container.appendChild(bitWrapper);
+                 }
+            }
+
+            // Updates the bit switches based on a decimal number
+            const updateBitsFromDecimal = (decimal, idPrefix) => {
+                for (let i = 7; i >= 0; i--) {
+                    const checkbox = document.getElementById(`${idPrefix}-bit-${i}`);
+                    if (checkbox) {
+                       checkbox.checked = (decimal >> i) & 1;
+                    }
+                }
+            };
+            
+            // Updates the result display (read-only bits)
+            const updateResultBits = (decimal, highlightClass = '') => {
+                 for (let i = 7; i >= 0; i--) {
+                    const bitDiv = document.getElementById(`result-bit-${i}`);
+                    const bitSpan = bitDiv.querySelector('span');
+                    const isSet = (decimal >> i) & 1;
+                    
+                    bitSpan.textContent = isSet ? '1' : '0';
+                    bitSpan.className = isSet ? 'text-4xl font-bold text-yellow-300' : 'text-4xl font-bold text-gray-600';
+
+                    // Add highlight animation if needed
+                    if (highlightClass) {
+                        bitDiv.classList.remove('highlight-and', 'highlight-or', 'highlight-xor', 'highlight-shift');
+                        // a trick to restart animation
+                        void bitDiv.offsetWidth; 
+                        bitDiv.classList.add(highlightClass);
+                    }
+                 }
+            }
+
+
+            // Updates the decimal input field based on the state of the switches
+            const updateDecimalFromBits = (idPrefix) => {
+                let decimal = 0;
+                for (let i = 7; i >= 0; i--) {
+                    const checkbox = document.getElementById(`${idPrefix}-bit-${i}`);
+                    if (checkbox && checkbox.checked) {
+                        decimal += Math.pow(2, i);
+                    }
+                }
+                return decimal;
+            };
+
+            const performOperation = () => {
+                if (!state.operator) return;
+
+                let a = state.a;
+                let b = state.b;
+                let newResult = 0;
+                let explanation = '';
+                let highlightClass = '';
+
+                switch (state.operator) {
+                    case 'AND':
+                        newResult = a & b;
+                        explanation = "Result bit is 1 only if BOTH bits above are 1.";
+                        highlightClass = 'highlight-and';
+                        break;
+                    case 'OR':
+                        newResult = a | b;
+                        explanation = "Result bit is 1 if EITHER bit above is 1.";
+                        highlightClass = 'highlight-or';
+                        break;
+                    case 'XOR':
+                        newResult = a ^ b;
+                        explanation = "Result bit is 1 if the bits above are DIFFERENT.";
+                        highlightClass = 'highlight-xor';
+                        break;
+                    case 'NOT':
+                        newResult = ~a & 255; // & 255 to keep it an 8-bit unsigned value
+                        explanation = "Each result bit is the INVERSE of the bit in A.";
+                        highlightClass = 'highlight-xor';
+                        break;
+                    case 'LSHIFT':
+                        newResult = (a << 1) & 255;
+                        explanation = "All bits in A shifted LEFT by one. Rightmost bit is filled with 0.";
+                        highlightClass = 'highlight-shift';
+                        break;
+                    case 'RSHIFT':
+                        newResult = a >> 1;
+                        explanation = "All bits in A shifted RIGHT by one. Leftmost bit is filled with 0.";
+                        highlightClass = 'highlight-shift';
+                        break;
+                }
+                
+                state.result = newResult;
+                decResult_div.textContent = state.result;
+                explanationDiv.textContent = explanation;
+                updateResultBits(state.result, highlightClass);
+            };
+
+            // --- Event Listeners Setup ---
+            
+            // Decimal input changes
+            decA_input.addEventListener('input', (e) => {
+                state.a = parseInt(e.target.value) || 0;
+                if (state.a > 255) state.a = 255;
+                e.target.value = state.a;
+                updateBitsFromDecimal(state.a, 'a');
+                performOperation();
+            });
+            decB_input.addEventListener('input', (e) => {
+                state.b = parseInt(e.target.value) || 0;
+                 if (state.b > 255) state.b = 255;
+                e.target.value = state.b;
+                updateBitsFromDecimal(state.b, 'b');
+                performOperation();
+            });
+
+            // Bit switch changes
+            bitsA_container.addEventListener('change', () => {
+                state.a = updateDecimalFromBits('a');
+                decA_input.value = state.a;
+                performOperation();
+            });
+             bitsB_container.addEventListener('change', () => {
+                state.b = updateDecimalFromBits('b');
+                decB_input.value = state.b;
+                performOperation();
+            });
+
+            // Operator button clicks
+            operatorButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const op = button.dataset.op;
+
+                    operatorButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    if (button.id === 'clearOp') {
+                         state.operator = null;
+                         state.result = 0;
+                         decResult_div.textContent = 0;
+                         updateResultBits(0);
+                         explanationDiv.textContent = '';
+                         return;
+                    }
+                    
+                    button.classList.add('active');
+                    state.operator = op;
+                    performOperation();
+                });
+            });
+
+
+            // --- Initialization ---
+            const init = () => {
+                createBitSwitches(bitsA_container, 'a');
+                createBitSwitches(bitsB_container, 'b');
+                createResultBits(bitsResult_container);
+
+                decA_input.value = state.a;
+                decB_input.value = state.b;
+
+                updateBitsFromDecimal(state.a, 'a');
+                updateBitsFromDecimal(state.b, 'b');
+                updateResultBits(state.result);
+            };
+
+            init();
+        });
+    </script>
+</body>
+</html>
