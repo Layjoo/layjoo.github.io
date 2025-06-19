@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Integer Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Source+Code+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #D1D5DB; /* text-gray-300 */
+        }
+        .code-font {
+            font-family: 'Source Code Pro', monospace;
+        }
+        #int-input {
+            background-color: #374151;
+            color: #F9FAFB;
+            border: 1px solid #4B5563;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            width: 12rem;
+            text-align: center;
+        }
+        #int-input:focus {
+            outline: none;
+            border-color: #60A5FA;
+            box-shadow: 0 0 0 2px #3B82F6;
+        }
+        .value-box {
+            background-color: #1F2937; /* bg-gray-800 */
+            border: 1px solid #4B5563; /* border-gray-600 */
+            border-radius: 0.375rem; /* rounded-md */
+            padding: 0.75rem; /* p-3 */
+            text-align: center;
+            font-size: 0.875rem; /* text-sm */
+            transition: all 0.2s ease-in-out;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .value-box:hover {
+            border-color: #60A5FA; /* border-blue-400 */
+        }
+        .row-label {
+            width: 8rem; /* w-32 */
+            flex-shrink: 0;
+            color: #9CA3AF; /* text-gray-400 */
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- Interactive Tool -->
+    <div class="w-full max-w-3xl mx-auto">
+        
+        <!-- C++ Struct Simulation -->
+        <div class="code-font bg-gray-900 border border-gray-700 p-6 rounded-lg shadow-2xl w-full mb-10">
+            <span class="text-purple-400">struct</span> <span class="text-green-400">MyStruct</span> {
+            <div class="ml-4">
+                <span class="text-purple-400">int</span> x = <input type="number" id="int-input" value="1094795585" min="0" max="4294967295">;
+            </div>
+            };
+        </div>
+        
+        <!-- Visualization Area -->
+        <div class="w-full bg-gray-900/50 border border-gray-700/50 p-6 rounded-lg">
+            <div class="grid grid-cols-5 gap-2 text-center mb-2 code-font text-xs text-gray-400">
+                <div></div> <!-- Spacer for label -->
+                <div>Byte 0 (MSB)</div>
+                <div>Byte 1</div>
+                <div>Byte 2</div>
+                <div>Byte 3 (LSB)</div>
+            </div>
+
+            <div class="space-y-3">
+                <!-- Hex Row -->
+                <div class="flex items-center gap-2">
+                    <span class="row-label code-font">Hex</span>
+                    <div class="grid grid-cols-4 gap-2 flex-grow">
+                        <div id="hex-0" class="value-box"></div>
+                        <div id="hex-1" class="value-box"></div>
+                        <div id="hex-2" class="value-box"></div>
+                        <div id="hex-3" class="value-box"></div>
+                    </div>
+                </div>
+
+                <!-- Binary Row -->
+                <div class="flex items-center gap-2">
+                    <span class="row-label code-font">Binary</span>
+                    <div class="grid grid-cols-4 gap-2 flex-grow">
+                        <div id="bin-0" class="value-box"></div>
+                        <div id="bin-1" class="value-box"></div>
+                        <div id="bin-2" class="value-box"></div>
+                        <div id="bin-3" class="value-box"></div>
+                    </div>
+                </div>
+
+                <!-- Base256 Row -->
+                <div class="flex items-center gap-2">
+                    <span class="row-label code-font">Base 256</span>
+                    <div class="grid grid-cols-4 gap-2 flex-grow">
+                        <div id="b256-0" class="value-box"></div>
+                        <div id="b256-1" class="value-box"></div>
+                        <div id="b256-2" class="value-box"></div>
+                        <div id="b256-3" class="value-box"></div>
+                    </div>
+                </div>
+
+                 <!-- ASCII Row -->
+                 <div class="flex items-center gap-2">
+                    <span class="row-label code-font">ASCII</span>
+                    <div class="grid grid-cols-4 gap-2 flex-grow">
+                        <div id="ascii-0" class="value-box text-lg"></div>
+                        <div id="ascii-1" class="value-box text-lg"></div>
+                        <div id="ascii-2" class="value-box text-lg"></div>
+                        <div id="ascii-3" class="value-box text-lg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputElement = document.getElementById('int-input');
+
+            // Get references to all the individual value boxes
+            const hexElements = [document.getElementById('hex-0'), document.getElementById('hex-1'), document.getElementById('hex-2'), document.getElementById('hex-3')];
+            const binElements = [document.getElementById('bin-0'), document.getElementById('bin-1'), document.getElementById('bin-2'), document.getElementById('bin-3')];
+            const b256Elements = [document.getElementById('b256-0'), document.getElementById('b256-1'), document.getElementById('b256-2'), document.getElementById('b256-3')];
+            const asciiElements = [document.getElementById('ascii-0'), document.getElementById('ascii-1'), document.getElementById('ascii-2'), document.getElementById('ascii-3')];
+
+            function updateVisualizations() {
+                let number = parseInt(inputElement.value, 10);
+                if (isNaN(number)) {
+                    number = 0;
+                }
+                
+                const MAX_UINT32 = 4294967295;
+                const MIN_UINT32 = 0;
+                number = Math.max(MIN_UINT32, Math.min(number, MAX_UINT32));
+
+                const buffer = new ArrayBuffer(4);
+                const view = new DataView(buffer);
+                view.setUint32(0, number, false); // false for Big-Endian
+
+                for (let i = 0; i < 4; i++) {
+                    const byteValue = view.getUint8(i);
+
+                    // --- CONVERSIONS ---
+                    const hex = byteValue.toString(16).toUpperCase().padStart(2, '0');
+                    const binary = byteValue.toString(2).padStart(8, '0');
+                    const base256 = byteValue;
+                    const ascii = (byteValue >= 32 && byteValue < 127) ? String.fromCharCode(byteValue) : '.';
+
+                    // --- UPDATE THE DOM ---
+                    hexElements[i].textContent = `0x${hex}`;
+                    binElements[i].textContent = `${binary.slice(0,4)} ${binary.slice(4)}`;
+                    b256Elements[i].textContent = base256;
+                    asciiElements[i].textContent = `'${ascii}'`;
+                }
+            }
+
+            inputElement.addEventListener('input', updateVisualizations);
+            updateVisualizations(); // Initial call
+        });
+    </script>
+</body>
+</html>
